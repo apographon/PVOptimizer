@@ -1,0 +1,164 @@
+id: '1751448147075'
+alias: aOSC Batterie-Ladung PV-Prognose
+description: 'Stündliche Ladeleistung (PV-Prognose, SOC). Push nur um 08:00 und 12:00.
+  Keine Ausführung bei fehlendem SOC- oder Prognosesensor.'
+mode: single
+triggers:
+  - trigger: time_pattern
+    hours: '*'
+    minutes: '0'
+    seconds: '0'
+conditions:
+  - condition: template
+    value_template: "{% if states('sensor.battery_level') not in ['unknown', 'unavailable', 'none', ''] and states('sensor.pv_forecast_today') not in ['unknown', 'unavailable', 'none', ''] %}true{% else %}false{% endif %}"
+actions:
+  - variables:
+      batteriekapazitaet: 10
+      soc_grenzwert: 30
+      prognose_schwelle: 20
+      mindest_ladeleistung: 500
+      maximal_ladeleistung: 5000
+      ziel_uhrzeit: 15
+      soc: '{{ states(''sensor.battery_level'') | float(0) }}'
+      pv_forecast: '{{ states(''sensor.pv_forecast_today'') | float(0) }}'
+      discharge_avg_raw: '{{ states(''sensor.battery_discharge_avg_3m'') | float(10)
+        }}'
+      eigenverbrauch: '{{ discharge_avg_raw * 1.1 }}'
+      batterieladung: '{{ batteriekapazitaet - (soc / 100 * batteriekapazitaet) }}'
+      bedarf: '{{ eigenverbrauch + batterieladung }}'
+      dynamische_ladeleistung: '{% set now = now() %} {% set ziel = now.replace(hour=ziel_uhrzeit,
+        minute=0, second=0) %} {% set restzeit = ((ziel - now).total_seconds() / 3600)
+        | float(0) %} {% set kwh_benoetigt = batteriekapazitaet - (soc / 100 * batteriekapazitaet)
+        %} {% set roh = (kwh_benoetigt / restzeit) * 1000 if restzeit > 0 else 0 %}
+        {% set begrenzt = [roh, maximal_ladeleistung] | min %} {{ [begrenzt, mindest_ladeleistung]
+        | max | round(0) }}
+
+        '
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ now().weekday() == 4 }}'
+      sequence:
+      - target:
+          entity_id: input_number.set_sg_battery_max_charge_power
+        data:
+          value: '{{ maximal_ladeleistung }}'
+        action: input_number.set_value
+      - data:
+          entity_id: input_text.battery_charge_decision
+          value: freitag_forciert
+        action: input_text.set_value
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{% if (now().hour == 8 or now().hour == 12) and now().minute == 0 %}true{% else %}false{% endif %}"
+          sequence:
+          - action: notify.lanar
+            metadata: {}
+            data:
+              title: Freitagsladung
+              message: Freitag → Ladeleistung 5000 W forciert.
+              data:
+                mode: single
+    - conditions:
+      - condition: template
+        value_template: '{{ pv_forecast >= prognose_schwelle and pv_forecast >= bedarf
+          }}'
+      sequence:
+      - target:
+          entity_id: input_number.set_sg_battery_max_charge_power
+        data:
+          value: '{{ dynamische_ladeleistung | int }}'
+        action: input_number.set_value
+      - data:
+          entity_id: input_text.battery_charge_decision
+          value: geladen
+        action: input_text.set_value
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{% if (now().hour == 8 or now().hour == 12) and now().minute == 0 %}true{% else %}false{% endif %}"
+          sequence:
+          - action: notify.lanar
+            metadata: {}
+            data:
+              title: PV ausreichend
+              message: 'PV-Prognose: {{ pv_forecast | round(1) }} kWh ≥ Bedarf: {{ bedarf
+                | round(1) }} kWh. Ladeleistung: {{ dynamische_ladeleistung }} W gesetzt.
+
+                '
+              data:
+                mode: single
+    - conditions:
+      - condition: template
+        value_template: '{{ pv_forecast < prognose_schwelle and soc < soc_grenzwert
+          }}'
+      sequence:
+      - target:
+          entity_id: input_number.set_sg_battery_max_charge_power
+        data:
+          value: '{{ maximal_ladeleistung }}'
+        action: input_number.set_value
+      - data:
+          entity_id: input_text.battery_charge_decision
+          value: ladung_erzwungen
+        action: input_text.set_value
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{% if (now().hour == 8 or now().hour == 12) and now().minute == 0 %}true{% else %}false{% endif %}"
+          sequence:
+          - action: notify.lanar
+            metadata: {}
+            data:
+              title: Ladung erzwungen
+              message: 'PV-Prognose: {{ pv_forecast | round(1) }} kWh < Bedarf: {{ bedarf
+                | round(1) }} kWh. SOC = {{ soc | round(0) }} % → Ladeleistung {{ maximal_ladeleistung
+                }} W gesetzt.
+
+                '
+              data:
+                mode: single
+    - conditions:
+      - condition: template
+        value_template: '{{ pv_forecast < prognose_schwelle and soc >= soc_grenzwert
+          }}'
+      sequence:
+      - target:
+          entity_id: input_number.set_sg_battery_max_charge_power
+        data:
+          value: '{{ mindest_ladeleistung }}'
+        action: input_number.set_value
+      - data:
+          entity_id: input_text.battery_charge_decision
+          value: warte_auf_sonne
+        action: input_text.set_value
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{% if (now().hour == 8 or now().hour == 12) and now().minute == 0 %}true{% else %}false{% endif %}"
+          sequence:
+          - action: notify.lanar
+            metadata: {}
+            data:
+              title: Ladeverzögerung
+              message: 'PV-Prognose: {{ pv_forecast | round(1) }} kWh < Bedarf: {{ bedarf
+                | round(1) }} kWh. SOC = {{ soc | round(0) }} % → nur {{ mindest_ladeleistung
+                }} W gesetzt.
+
+                '
+              data:
+                mode: single
+    - conditions:
+      - condition: template
+        value_template: "{% if true %}true{% else %}false{% endif %}"
+      sequence:
+      - data:
+          entity_id: input_text.battery_charge_decision
+          value: kein_zweig
+        action: input_text.set_value
+  - action: system_log.write
+    data:
+      level: info
+      logger: pvoptimizer
+      message: "PVoptimizer: {{ now().strftime('%Y-%m-%d %H:%M') }} decision={{ states('input_text.battery_charge_decision') }} max_charge_W={{ states('input_number.set_sg_battery_max_charge_power') }} SOC={{ states('sensor.battery_level') }}% forecast_kWh={{ states('sensor.pv_forecast_today') }}"

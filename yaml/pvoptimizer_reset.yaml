@@ -1,0 +1,14 @@
+id: '1751732737952'
+alias: aOSC Batterie Ladeleistung Reset um 20:00
+description: Setzt die Ladeleistung abends auf 5000 W zurück
+mode: single
+triggers:
+  - at: '20:00:00'
+    trigger: time
+conditions: []
+actions:
+  - target:
+      entity_id: input_number.set_sg_battery_max_charge_power
+    data:
+      value: 5000
+    action: input_number.set_value
