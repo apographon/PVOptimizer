@@ -1,5 +1,22 @@
 # Optional package: merge under packages: or copy into configuration.yaml (see docs).
 # DWD: set pvoptimizer_dwd_adjustment_enabled ON and edit DWD entity ids in pvoptimizer_charge.yaml if needed.
+# Template sensor: net grid power excluding both wallboxes (unavailable wallbox → 0 W). Used by apexcharts_power_day_card.yaml.
+
+template:
+  - sensor:
+      - name: Grid net excl. wallboxes
+        unique_id: pvoptimizer_grid_net_excl_wallboxes_w
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set net = states('sensor.net_consumption_rounded') | float(0) %}
+          {% set bad = ['unknown', 'unavailable', 'none', ''] %}
+          {% set cp = states('sensor.carport_power') %}
+          {% set gr = states('sensor.garage_power') %}
+          {% set cp_w = 0 if cp in bad else cp | float(0) %}
+          {% set gr_w = 0 if gr in bad else gr | float(0) %}
+          {{ net - cp_w - gr_w }}
 
 input_boolean:
   pvoptimizer_dwd_adjustment_enabled:

@@ -1,0 +1,446 @@
+# Mehrere Tage „blättern“ (wischen): HACS → „Swipe Card“ installieren
+# z. B. https://github.com/bramkragten/swipe-card — in HACS nach „swipe“ suchen.
+#
+# Im Dashboard als eine Karte einfügen (RAW). Weitere Tage: panel-Kopie mit offset: -4d usw.
+# Vergangene Tage: now: false (sonst irreführend).
+
+type: custom:swipe-card
+parameters:
+  effect: slide
+  speed: 350
+  spaceBetween: 16
+  centeredSlides: true
+  pagination:
+    type: bullets
+cards:
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Leistung — heute (W)"
+      show_states: false
+    graph_span: 24h
+    span:
+      start: day
+    show:
+      last_updated: false
+    now:
+      show: true
+      label: Jetzt
+    apex_config:
+      chart:
+        height: 380
+        stacked: false
+        zoom:
+          enabled: true
+        toolbar:
+          show: true
+      stroke:
+        width: 2
+      legend:
+        show: true
+        position: bottom
+      grid:
+        padding:
+          bottom: 16
+      dataLabels:
+        enabled: false
+    yaxis:
+      - id: w
+        min: 0
+        apex_config:
+          title:
+            text: W
+        decimals: 0
+    series:
+      - entity: sensor.total_dc_power
+        name: PV (DC)
+        color: '#2d7dd2'
+        type: area
+        curve: smooth
+        opacity: 0.45
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.grid_net_excl_wallboxes
+        name: Netz ohne Wallboxen
+        color: '#e07020'
+        type: area
+        curve: smooth
+        opacity: 0.4
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.carport_power
+        name: Wallbox Carport
+        color: '#e8c547'
+        type: area
+        curve: stepline
+        opacity: 0.5
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.garage_power
+        name: Wallbox Garage
+        color: '#f0e68c'
+        type: area
+        curve: stepline
+        opacity: 0.55
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.battery_charging_power
+        name: Batterie laden
+        color: '#7b4397'
+        type: area
+        curve: smooth
+        opacity: 0.55
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Leistung — gestern (W)"
+      show_states: false
+    graph_span: 24h
+    span:
+      start: day
+      offset: -1d
+    show:
+      last_updated: false
+    now:
+      show: false
+    apex_config:
+      chart:
+        height: 380
+        stacked: false
+        zoom:
+          enabled: true
+        toolbar:
+          show: true
+      stroke:
+        width: 2
+      legend:
+        show: true
+        position: bottom
+      grid:
+        padding:
+          bottom: 16
+      dataLabels:
+        enabled: false
+    yaxis:
+      - id: w
+        min: 0
+        apex_config:
+          title:
+            text: W
+        decimals: 0
+    series:
+      - entity: sensor.total_dc_power
+        name: PV (DC)
+        color: '#2d7dd2'
+        type: area
+        curve: smooth
+        opacity: 0.45
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.grid_net_excl_wallboxes
+        name: Netz ohne Wallboxen
+        color: '#e07020'
+        type: area
+        curve: smooth
+        opacity: 0.4
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.carport_power
+        name: Wallbox Carport
+        color: '#e8c547'
+        type: area
+        curve: stepline
+        opacity: 0.5
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.garage_power
+        name: Wallbox Garage
+        color: '#f0e68c'
+        type: area
+        curve: stepline
+        opacity: 0.55
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.battery_charging_power
+        name: Batterie laden
+        color: '#7b4397'
+        type: area
+        curve: smooth
+        opacity: 0.55
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Leistung — vor 2 Tagen (W)"
+      show_states: false
+    graph_span: 24h
+    span:
+      start: day
+      offset: -2d
+    show:
+      last_updated: false
+    now:
+      show: false
+    apex_config:
+      chart:
+        height: 380
+        stacked: false
+        zoom:
+          enabled: true
+        toolbar:
+          show: true
+      stroke:
+        width: 2
+      legend:
+        show: true
+        position: bottom
+      grid:
+        padding:
+          bottom: 16
+      dataLabels:
+        enabled: false
+    yaxis:
+      - id: w
+        min: 0
+        apex_config:
+          title:
+            text: W
+        decimals: 0
+    series:
+      - entity: sensor.total_dc_power
+        name: PV (DC)
+        color: '#2d7dd2'
+        type: area
+        curve: smooth
+        opacity: 0.45
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.grid_net_excl_wallboxes
+        name: Netz ohne Wallboxen
+        color: '#e07020'
+        type: area
+        curve: smooth
+        opacity: 0.4
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.carport_power
+        name: Wallbox Carport
+        color: '#e8c547'
+        type: area
+        curve: stepline
+        opacity: 0.5
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.garage_power
+        name: Wallbox Garage
+        color: '#f0e68c'
+        type: area
+        curve: stepline
+        opacity: 0.55
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.battery_charging_power
+        name: Batterie laden
+        color: '#7b4397'
+        type: area
+        curve: smooth
+        opacity: 0.55
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Leistung — vor 3 Tagen (W)"
+      show_states: false
+    graph_span: 24h
+    span:
+      start: day
+      offset: -3d
+    show:
+      last_updated: false
+    now:
+      show: false
+    apex_config:
+      chart:
+        height: 380
+        stacked: false
+        zoom:
+          enabled: true
+        toolbar:
+          show: true
+      stroke:
+        width: 2
+      legend:
+        show: true
+        position: bottom
+      grid:
+        padding:
+          bottom: 16
+      dataLabels:
+        enabled: false
+    yaxis:
+      - id: w
+        min: 0
+        apex_config:
+          title:
+            text: W
+        decimals: 0
+    series:
+      - entity: sensor.total_dc_power
+        name: PV (DC)
+        color: '#2d7dd2'
+        type: area
+        curve: smooth
+        opacity: 0.45
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.grid_net_excl_wallboxes
+        name: Netz ohne Wallboxen
+        color: '#e07020'
+        type: area
+        curve: smooth
+        opacity: 0.4
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.carport_power
+        name: Wallbox Carport
+        color: '#e8c547'
+        type: area
+        curve: stepline
+        opacity: 0.5
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.garage_power
+        name: Wallbox Garage
+        color: '#f0e68c'
+        type: area
+        curve: stepline
+        opacity: 0.55
+        stroke_width: 1
+        yaxis_id: w
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max
+      - entity: sensor.battery_charging_power
+        name: Batterie laden
+        color: '#7b4397'
+        type: area
+        curve: smooth
+        opacity: 0.55
+        stroke_width: 2
+        yaxis_id: w
+        unit: W
+        extend_to: now
+        fill_raw: last
+        group_by:
+          duration: 5min
+          func: max

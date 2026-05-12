@@ -1,0 +1,124 @@
+# Lovelace: ApexCharts Card — Tages-Leistung (PV, Netz o. Wallbox, Batterie, 2× Wallbox)
+#
+# Voraussetzungen:
+# 1. HACS → "ApexCharts Card" installieren, Dashboard neu laden.
+# 2. Template-Sensor `sensor.grid_net_excl_wallboxes` aus ENERGY_DASHBOARD_ENTITIES.md anlegen
+#    (net_consumption_rounded − Carport − Garage; Wallbox = 0 wenn unavailable).
+# 4. Wenn „Batterie laden“ keine Fläche zeigt: In HA → Verlauf prüfen, ob beim Laden Werte > 0
+#    kommen. Manche Geräte liefern Ladeleistung negativ — dann `invert: true` bei der Serie setzen.
+# 5. Reihenfolge: große Flächen (PV) zuerst, Batterie **zuletzt** ⇒ liegt optisch obenauf.
+
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Leistung heute (W)
+  show_states: false
+# Kalendertag 00:00–24:00 (laut ApexCharts-Doku: start XOR end, nicht beides)
+graph_span: 24h
+span:
+  start: day
+show:
+  last_updated: false
+now:
+  show: true
+  label: Jetzt
+apex_config:
+  chart:
+    height: 380
+    stacked: false
+    zoom:
+      enabled: true
+    toolbar:
+      show: true
+  stroke:
+    width: 2
+  legend:
+    show: true
+    position: bottom
+  grid:
+    padding:
+      bottom: 16
+  dataLabels:
+    enabled: false
+yaxis:
+  - id: w
+    min: 0
+    apex_config:
+      title:
+        text: W
+    decimals: 0
+
+series:
+  - entity: sensor.total_dc_power
+    name: PV (DC)
+    color: '#2d7dd2'
+    type: area
+    curve: smooth
+    opacity: 0.45
+    stroke_width: 2
+    yaxis_id: w
+    unit: W
+    extend_to: now
+    fill_raw: last
+    group_by:
+      duration: 5min
+      func: max
+
+  - entity: sensor.grid_net_excl_wallboxes
+    name: Netz ohne Wallboxen
+    color: '#e07020'
+    type: area
+    curve: smooth
+    opacity: 0.4
+    stroke_width: 2
+    yaxis_id: w
+    unit: W
+    extend_to: now
+    fill_raw: last
+    group_by:
+      duration: 5min
+      func: max
+
+  - entity: sensor.carport_power
+    name: Wallbox Carport
+    color: '#e8c547'
+    type: area
+    curve: stepline
+    opacity: 0.5
+    stroke_width: 1
+    yaxis_id: w
+    extend_to: now
+    fill_raw: last
+    group_by:
+      duration: 5min
+      func: max
+
+  - entity: sensor.garage_power
+    name: Wallbox Garage
+    color: '#f0e68c'
+    type: area
+    curve: stepline
+    opacity: 0.55
+    stroke_width: 1
+    yaxis_id: w
+    extend_to: now
+    fill_raw: last
+    group_by:
+      duration: 5min
+      func: max
+
+  # Fehlende Fläche? In HA-Verlauf prüfen. Ist Ladeleistung negativ, einfügen: invert: true
+  - entity: sensor.battery_charging_power
+    name: Batterie laden
+    color: '#7b4397'
+    type: area
+    curve: smooth
+    opacity: 0.55
+    stroke_width: 2
+    yaxis_id: w
+    unit: W
+    extend_to: now
+    fill_raw: last
+    group_by:
+      duration: 5min
+      func: max
