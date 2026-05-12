@@ -6,12 +6,20 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Added
 
+- **`docs/assets/apexcharts_power_day_example.png`**: screenshot for the ApexCharts day-power documentation (PV and battery as filled areas).
+- **`scripts/sync-to-home-assistant.sh`**: copies **`yaml/pvoptimizer_*.yaml`** to a live config tree (default **`HA_CONFIG_ROOT=/Volumes/config`** → `automations/` + `integrations/`). Run from repo root after edits; then reload automations / templates in HA.
+- **`pvoptimizer_helpers.yaml`**: template sensor **`sensor.grid_net_excl_wallboxes`** (`net_consumption_rounded` − wallboxes; unavailable → 0).
+- **`docs/apexcharts_power_day_swipe.yaml`**: Swipe Card — heute bis vor 3 Tagen (HACS).
+- **`docs/apexcharts_power_day_card.yaml`**: ApexCharts-Leistungskarte (Kalendertag) für PV, `grid_net_excl_wallboxes`, Batterie, Wallboxen.
+- **`docs/ENERGY_DASHBOARD_ENTITIES.md`**: optional table of entity IDs for PV / battery / grid / wallbox charts (installation-specific).
 - **PV forecast DWD pessimization (optional):** `input_boolean` + `pvoptimizer_dwd_*` in **`pvoptimizer_helpers.yaml`**; **`pv_forecast`** in **`pvoptimizer_charge.yaml`** when enabled.
 - **`docs/PVOPTIMIZER.md`**: **Open-Meteo** walkthrough + **optional DWD pessimization** section (entity ids, helpers).
 - `docs/RELATED_PROJECTS.md` — curated links to alternative approaches; linked from README.
 
 ### Changed
 
+- **`docs/ENERGY_DASHBOARD_ENTITIES.md`**, **`docs/PVOPTIMIZER.md`**, **`README`**: ApexCharts day chart documented with **single card vs swipe** and the **example screenshot**; relative links to YAML from `PVOPTIMIZER.md`.
+- **`docs/ENERGY_DASHBOARD_ENTITIES.md`**: document **grid net excl. wallboxes** (`net_consumption_rounded` − `carport_power` − `garage_power`) + optional template sensor.
 - **`pvoptimizer_charge.yaml`**: If **clamped** SOC **≥** **`soc_voller_akku_schwelle_pct`** (default **95**), inner **`choose`** sets **`max_charge_w`** and **`soc_nahe_voll_max`** first (overrides exception weekday and forecast arms). **`docs/PVOPTIMIZER.md`** and **`README`** updated.
 - **Docs:** `docs/PVOPTIMIZER.md` and `README` updated for **`state_attr` write bounds**, **robustness** section, install paths (automations vs packages), and testing notes.
 - **Language:** All documentation (`README`, `docs/PVOPTIMIZER.md`) and user-facing Home Assistant strings (automation **aliases**, **descriptions**, **notify** title/message, helper **`name:`** fields) are **English**. Values written to **`input_text.battery_charge_decision`** stay as compact tokens (e.g. `geladen`, `kein_zweig`) for backward compatibility.

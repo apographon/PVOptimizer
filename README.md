@@ -19,7 +19,12 @@ This setup assumes the battery is charged from **PV only**. PVoptimizer **modera
 | [docs/RELATED_PROJECTS.md](docs/RELATED_PROJECTS.md) | Public repos: EMHASS, Predbat, YAML examples, forecast integrations, **evcc** |
 | [docs/PVOPTIMIZER.md](docs/PVOPTIMIZER.md) | Full design, high-SOC max-cap branch, [Open-Meteo](docs/PVOPTIMIZER.md#pv-forecast-open-meteo-solar-forecast), optional [DWD pessimization](docs/PVOPTIMIZER.md#optional-dwd-weather-pessimization), [robustness](docs/PVOPTIMIZER.md#robustness-clamping--valid-range), decision tree |
 | [Testing & verification](docs/PVOPTIMIZER.md#testing-and-verification) | Check config, manual run, traces, notifier gating, reset |
+| [docs/apexcharts_power_day_swipe.yaml](docs/apexcharts_power_day_swipe.yaml) | **Swipe Card** (HACS): dieselbe Tages-Leistung für **heute … vor 3 Tagen** zum Durchwischen |
+| [docs/apexcharts_power_day_card.yaml](docs/apexcharts_power_day_card.yaml) | **ApexCharts Card** (HACS): PV, Netz o. Wallbox, Batterie laden, 2× Wallbox — Tagesansicht |
+| [docs/assets/apexcharts_power_day_example.png](docs/assets/apexcharts_power_day_example.png) | **Screenshot** der Tages-Leistung (Flächen für PV + Batterie laden); gilt für **Einzelkarte**; Swipe = gleiche Kurven, mehrere Tage |
+| [docs/ENERGY_DASHBOARD_ENTITIES.md](docs/ENERGY_DASHBOARD_ENTITIES.md) | **Optional:** table of HA entity IDs for PV / battery / grid / wallbox charts (installation-specific) |
 | [Optional Lovelace card](docs/PVOPTIMIZER.md#optional-dashboard-visualization-lovelace) | Mushroom card: power + max charge cap (`input_number`) |
+| [scripts/sync-to-home-assistant.sh](scripts/sync-to-home-assistant.sh) | **Sync** `yaml/*.yaml` → HA `automations/` + `integrations/` (default `HA_CONFIG_ROOT=/Volumes/config`) |
 | [yaml/pvoptimizer_helpers.yaml](yaml/pvoptimizer_helpers.yaml) | Optional helpers: standard / exception caps, optional **DWD** tunables |
 | [yaml/pvoptimizer_charge.yaml](yaml/pvoptimizer_charge.yaml) | Main automation (copy into HA `config/automations/`) |
 | [yaml/pvoptimizer_reset.yaml](yaml/pvoptimizer_reset.yaml) | Evening reset automation |
@@ -37,6 +42,8 @@ This setup assumes the battery is charged from **PV only**. PVoptimizer **modera
 3. Ensure `configuration.yaml` includes `automations.yaml` (typical: `automation: !include automations.yaml`).
 4. Define the required helpers and entities listed in [docs/PVOPTIMIZER.md](docs/PVOPTIMIZER.md). Replace `notify.lanar` if you use another notifier.
 5. **Reload automations** (Developer tools → YAML) or restart Home Assistant.
+
+**Keep repo and live config in sync:** from the repo root, run `./scripts/sync-to-home-assistant.sh` (or set `HA_CONFIG_ROOT` if your config is not `/Volumes/config`). Then reload YAML in HA as needed.
 
 Testing and verification: [docs/PVOPTIMIZER.md — Testing and verification](docs/PVOPTIMIZER.md#testing-and-verification).
 

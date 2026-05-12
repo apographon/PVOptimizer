@@ -25,6 +25,7 @@ Copies of the live YAML live in **`../yaml/`** so you can diff or install them w
 - [Assumptions and caveats](#assumptions-and-caveats)
 - [Testing and verification](#testing-and-verification)
 - [Optional dashboard (Lovelace)](#optional-dashboard-visualization-lovelace)
+- [Day power chart (ApexCharts)](#day-power-chart-apexcharts)
 - [Installing from GitHub](#installing-from-github)
 - [Versioning](#versioning)
 
@@ -98,8 +99,9 @@ The PVoptimizer aligns **battery charge power** (from **PV only** in the intende
 |------|------|
 | `yaml/pvoptimizer_charge.yaml` | Automation id `1751448147075` — hourly logic: if SOC ≥ **`soc_voller_akku_schwelle_pct`** → **`max_charge_w`** / **`soc_nahe_voll_max`**; else optional **DWD** on **`pv_forecast`**, outer **`choose`** for incomplete SOC/forecast, **`state_attr` min/max** on writes, **`kein_zweig`**, `system_log.write` |
 | `yaml/pvoptimizer_reset.yaml` | Automation id `1751732737952` — 20:00 reset: **`pvoptimizer_max_charge_w`** clamped like the charge automation |
-| `yaml/pvoptimizer_helpers.yaml` | Optional package: standard / exception caps **+ optional DWD** `input_boolean` / `input_number` tunables |
+| `yaml/pvoptimizer_helpers.yaml` | Optional package: standard / exception caps, **optional DWD** tunables, **template sensor** **`sensor.grid_net_excl_wallboxes`** (net grid − wallboxes) |
 | `docs/assets/mushroom-battery-card.png` | Optional screenshot for the Lovelace example |
+| `docs/assets/apexcharts_power_day_example.png` | Optional screenshot: day power chart (PV + battery as areas, single-day ApexCharts) |
 
 IDs are fixed so that replacing the YAML on an existing HA instance keeps history and entity links stable when possible.
 
@@ -481,7 +483,7 @@ Do this on your Home Assistant instance after copying YAML and reloading automat
 
 ## Optional dashboard visualization (Lovelace)
 
-This is **optional UI sugar**: a **Mushroom** template card that shows actual battery charge/discharge power and, while charging, the **configured max charge power** from `input_number.set_sg_battery_max_charge_power` (the same helper PVoptimizer writes).
+This is **optional UI sugar**: a **Mushroom** template card that shows actual battery charge/discharge power and, while charging, the **configured max charge power** from `input_number.set_sg_battery_max_charge_power` (the same helper PVoptimizer writes). For a **multi-series day power chart** (PV, grid excl. wallboxes, wallboxes, battery charging in W), see **[Day power chart (ApexCharts)](#day-power-chart-apexcharts)** below.
 
 ### Example (dashboard)
 
@@ -558,6 +560,23 @@ If the literal block adds unwanted line breaks in your Mushroom version, use a *
 secondary: "{% set c = states('sensor.battery_charging_power') | float(0) %}{% set d = states('sensor.battery_discharging_power') | float(0) %}{% set mr = states('input_number.set_sg_battery_max_charge_power') %}{% set m_ok = mr not in ['unknown', 'unavailable', 'none', ''] %}{% set m = mr | float(0) %}{% if c > 0 %}{% if m_ok %}Charging at {{ c | round(0) }} W (max {{ m | round(0) }} W){% else %}Charging at {{ c | round(0) }} W{% endif %}{% elif d > 0 %}Discharging at {{ d | round(0) }} W{% else %}Battery idle{% endif %}"
 ```
 
+---
+
+### Day power chart (ApexCharts)
+
+Optional **area chart** for **instantaneous power** (W) over one calendar day: **PV (DC)**, **grid net excluding wallboxes**, **two wallboxes**, **battery charging power**. Same installation as the screenshot below (PV + battery as filled areas).
+
+![ApexCharts: Leistung heute (W)](assets/apexcharts_power_day_example.png)
+
+The screenshot is the **single-day** card. The **swipe** YAML wraps four such charts (today … three days back); styling and entities are the same per panel.
+
+| Layout | YAML | When to use |
+|--------|------|-------------|
+| **Single card** | [`apexcharts_power_day_card.yaml`](apexcharts_power_day_card.yaml) | **Today only**; vertical **Jetzt** line. |
+| **Swipe card** | [`apexcharts_power_day_swipe.yaml`](apexcharts_power_day_swipe.yaml) | **Swipe** between today and the **previous three days**; requires HACS [Swipe Card](https://github.com/bramkragten/swipe-card). |
+
+**Requirements:** HACS [ApexCharts Card](https://github.com/RomRider/apexcharts-card); template entity **`sensor.grid_net_excl_wallboxes`** from **`yaml/pvoptimizer_helpers.yaml`**; entity list and notes in **[`docs/ENERGY_DASHBOARD_ENTITIES.md`](../docs/ENERGY_DASHBOARD_ENTITIES.md)**. Use a **power** sensor for battery charging (e.g. **`sensor.battery_charging_power`** in W), not a **kWh** cumulative sensor, or the scale and legend will be wrong.
+
 ### YAML pitfall: “duplicated mapping key”
 
 - Ensure the card has **only one** `secondary:` key (remove an old block when pasting an updated one).
@@ -573,6 +592,8 @@ secondary: "{% set c = states('sensor.battery_charging_power') | float(0) %}{% s
 3. Add **`pvoptimizer_helpers.yaml`** under your **`packages:`** / `integrations` merge (or paste its `input_number` block into `configuration.yaml`). Paths vary by setup; only the **two** charge/reset files belong in **`automations/`**.
 4. Add **`!include`** lines for the two automations as in [Home Assistant wiring](#home-assistant-wiring).
 5. Align entity IDs, **`set_sg_battery_max_charge_power`** domain, and **`notify`** service; reload automations.
+
+**Local checkout + mounted HA config:** from the repo root run **`./scripts/sync-to-home-assistant.sh`** to copy the three files under **`yaml/`** into **`automations/`** and **`integrations/`**. Override the target with **`HA_CONFIG_ROOT=/path/to/config`**. Then reload **Automations** and **Template entities** (or restart HA) as needed.
 
 ---
 
