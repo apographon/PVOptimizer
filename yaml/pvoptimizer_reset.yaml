@@ -1,6 +1,6 @@
 id: '1751732737952'
-alias: aOSC Batterie Ladeleistung Reset um 20:00
-description: Setzt die Ladeleistung abends auf 5000 W zurück
+alias: PVoptimizer — reset max charge at 20:00
+description: At 20:00, set max charge power to input_number.pvoptimizer_max_charge_w.
 mode: single
 triggers:
   - at: '20:00:00'
@@ -10,5 +10,7 @@ actions:
   - target:
       entity_id: input_number.set_sg_battery_max_charge_power
     data:
-      value: 5000
+      value: '{{ [[states(''input_number.pvoptimizer_max_charge_w'') | float(5000), state_attr(''input_number.set_sg_battery_max_charge_power'',
+        ''min'') | float(0)] | max, state_attr(''input_number.set_sg_battery_max_charge_power'',
+        ''max'') | float(20000)] | min | int }}'
     action: input_number.set_value

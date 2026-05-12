@@ -1,0 +1,81 @@
+# Optional package: merge under packages: or copy into configuration.yaml (see docs).
+# DWD: set pvoptimizer_dwd_adjustment_enabled ON and edit DWD entity ids in pvoptimizer_charge.yaml if needed.
+
+input_boolean:
+  pvoptimizer_dwd_adjustment_enabled:
+    name: PVoptimizer apply DWD weather adjustment
+    icon: mdi:shield-sun
+    initial: false
+
+input_number:
+  pvoptimizer_max_charge_w:
+    name: PVoptimizer standard max charge power
+    min: 0
+    max: 20000
+    step: 50
+    unit_of_measurement: W
+    icon: mdi:flash
+    initial: 5000
+  pvoptimizer_exception_max_charge_w:
+    name: PVoptimizer exception day max charge power
+    min: 0
+    max: 20000
+    step: 50
+    unit_of_measurement: W
+    icon: mdi:calendar-star
+    initial: 2500
+  pvoptimizer_exception_weekday:
+    name: PVoptimizer exception weekday
+    min: 0
+    max: 6
+    step: 1
+    icon: mdi:calendar-week
+    initial: 4
+  pvoptimizer_dwd_cloud_threshold:
+    name: PVoptimizer DWD cloud threshold
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:cloud
+    initial: 70
+  pvoptimizer_dwd_max_reduction_pct:
+    name: PVoptimizer DWD max forecast cut at 100% cloud
+    min: 0
+    max: 90
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:arrow-down-bold
+    initial: 35
+  pvoptimizer_dwd_precip_threshold_mm:
+    name: PVoptimizer DWD precipitation threshold
+    min: 0
+    max: 50
+    step: 0.1
+    unit_of_measurement: mm
+    icon: mdi:weather-rainy
+    initial: 0.1
+  pvoptimizer_dwd_precip_factor_pct:
+    name: PVoptimizer DWD precip forecast factor
+    min: 50
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:percent
+    initial: 90
+  pvoptimizer_dwd_fog_threshold_pct:
+    name: PVoptimizer DWD fog probability threshold
+    min: 0
+    max: 100
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:weather-fog
+    initial: 70
+  pvoptimizer_dwd_fog_factor_pct:
+    name: PVoptimizer DWD fog forecast factor
+    min: 50
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:percent
+    initial: 95

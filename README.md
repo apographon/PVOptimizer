@@ -8,20 +8,25 @@ When publishing on GitHub, consider topics such as `home-assistant`, `photovolta
 
 ## Business purpose (why it exists)
 
-This setup assumes the battery is charged from **PV only**. PVoptimizer **moderates** home-battery charging when the forecast is strong so feed-in stays **smoother** (fewer export spikes), neighbors and the **grid operator** see **earlier, more gradual** solar export when the EV is idle, and **lower currents** can be easier on the cells. On **~8 kWp** systems, steadier behavior also helps **EVCC / wallbox** ramp (e.g. **1P 16 A ~3.7 kW** → **3P 6 A ~4.1 kW** → **3P 10 A**). On poor forecast days with low SOC it still **raises** charge speed; when SOC is already fine it **limits** charging (“wait for sun”). **Friday** rule and **evening reset** are habits in the default YAML. Full detail: [docs/PVOPTIMIZER.md](docs/PVOPTIMIZER.md#business-purpose).
+This setup assumes the battery is charged from **PV only**. PVoptimizer **moderates** home-battery charging when the forecast is strong so feed-in stays **smoother** (fewer export spikes), neighbors and the **grid operator** see **earlier, more gradual** solar export when the EV is idle, and **lower currents** can be easier on the cells. On **~8 kWp** systems, steadier behavior also helps **EVCC / wallbox** ramp (e.g. **1P 16 A ~3.7 kW** → **3P 6 A ~4.1 kW** → **3P 10 A**). On poor forecast days with low SOC it still **raises** charge speed; when SOC is already fine it **limits** charging (“wait for sun”). When SOC is **at or above** a set threshold (default **95 %** in YAML), the **hourly** run restores the **standard** max charge cap before exception-day and forecast rules. A **configurable weekday** (default Friday) can cap max charge for a known high-demand day, and **evening reset** returns the standard cap from a helper. Full detail: [docs/PVOPTIMIZER.md](docs/PVOPTIMIZER.md#business-purpose).
+
+**Background:** [Comparable tools & stacks](docs/RELATED_PROJECTS.md) (EMHASS, Predbat, examples, evcc).
 
 ## Contents
 
 | Path | Purpose |
 |------|--------|
-| [docs/PVOPTIMIZER.md](docs/PVOPTIMIZER.md) | Full design, entity requirements, decision tree, tuning |
+| [docs/RELATED_PROJECTS.md](docs/RELATED_PROJECTS.md) | Public repos: EMHASS, Predbat, YAML examples, forecast integrations, **evcc** |
+| [docs/PVOPTIMIZER.md](docs/PVOPTIMIZER.md) | Full design, high-SOC max-cap branch, [Open-Meteo](docs/PVOPTIMIZER.md#pv-forecast-open-meteo-solar-forecast), optional [DWD pessimization](docs/PVOPTIMIZER.md#optional-dwd-weather-pessimization), [robustness](docs/PVOPTIMIZER.md#robustness-clamping--valid-range), decision tree |
 | [Testing & verification](docs/PVOPTIMIZER.md#testing-and-verification) | Check config, manual run, traces, notifier gating, reset |
 | [Optional Lovelace card](docs/PVOPTIMIZER.md#optional-dashboard-visualization-lovelace) | Mushroom card: power + max charge cap (`input_number`) |
+| [yaml/pvoptimizer_helpers.yaml](yaml/pvoptimizer_helpers.yaml) | Optional helpers: standard / exception caps, optional **DWD** tunables |
 | [yaml/pvoptimizer_charge.yaml](yaml/pvoptimizer_charge.yaml) | Main automation (copy into HA `config/automations/`) |
+| [yaml/pvoptimizer_reset.yaml](yaml/pvoptimizer_reset.yaml) | Evening reset automation |
 | [CHANGELOG.md](CHANGELOG.md) | Release notes |
 | [LICENSE](LICENSE) | MIT |
 
-1. Copy `yaml/pvoptimizer_charge.yaml` and `yaml/pvoptimizer_reset.yaml` to your HA configuration directory, e.g. `config/automations/`.
+1. Copy **`yaml/pvoptimizer_charge.yaml`** and **`yaml/pvoptimizer_reset.yaml`** to **`config/automations/`**. Add **`yaml/pvoptimizer_helpers.yaml`** via **`packages:`** (e.g. `config/integrations/`)—not under **`automations/`**—unless you merge the `input_number` block elsewhere.
 2. At the **top** of your `automations.yaml` list (or wherever you keep automations), add:
 
    ```yaml

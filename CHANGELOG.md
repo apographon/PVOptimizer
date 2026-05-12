@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+
+- **PV forecast DWD pessimization (optional):** `input_boolean` + `pvoptimizer_dwd_*` in **`pvoptimizer_helpers.yaml`**; **`pv_forecast`** in **`pvoptimizer_charge.yaml`** when enabled.
+- **`docs/PVOPTIMIZER.md`**: **Open-Meteo** walkthrough + **optional DWD pessimization** section (entity ids, helpers).
+- `docs/RELATED_PROJECTS.md` — curated links to alternative approaches; linked from README.
+
+### Changed
+
+- **`pvoptimizer_charge.yaml`**: If **clamped** SOC **≥** **`soc_voller_akku_schwelle_pct`** (default **95**), inner **`choose`** sets **`max_charge_w`** and **`soc_nahe_voll_max`** first (overrides exception weekday and forecast arms). **`docs/PVOPTIMIZER.md`** and **`README`** updated.
+- **Docs:** `docs/PVOPTIMIZER.md` and `README` updated for **`state_attr` write bounds**, **robustness** section, install paths (automations vs packages), and testing notes.
+- **Language:** All documentation (`README`, `docs/PVOPTIMIZER.md`) and user-facing Home Assistant strings (automation **aliases**, **descriptions**, **notify** title/message, helper **`name:`** fields) are **English**. Values written to **`input_text.battery_charge_decision`** stay as compact tokens (e.g. `geladen`, `kein_zweig`) for backward compatibility.
+- **`pvoptimizer_charge.yaml`**: Missing SOC or forecast → set max charge to **`input_number.pvoptimizer_max_charge_w`** (fallback 5000), decision **`daten_unvollstaendig`**; no longer skips the automation run at `conditions` level.
+- **Configurable caps**: **`pvoptimizer_max_charge_w`**, **`pvoptimizer_exception_max_charge_w`**, **`pvoptimizer_exception_weekday`** (0=Mon … 6=Sun) via package **`pvoptimizer_helpers.yaml`**; exception branch sets **`sonder_tag_forciert`**.
+- **Sungrow SOC window**: **`batterieladung` / `bedarf` / dynamic power** use **`input_number.set_sg_max_soc`** and **`sensor.battery_capacity`**; “bad day, low buffer” vs “wait for sun” compares SOC to **`input_number.set_sg_reserved_soc_for_backup`**.
+- **`pvoptimizer_charge.yaml` / `pvoptimizer_reset.yaml`**: Write clamp **`min`/`max`** from **`input_number.set_sg_battery_max_charge_power`** (**fallback 0 / 20000** if attributes missing).
+
 ## [1.0.0] — 2026-05-12
 
 ### Added
