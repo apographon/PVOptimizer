@@ -85,7 +85,8 @@ Use this entity in ApexCharts instead of raw `net_consumption_rounded` when you 
 2. **Second y-axis kW vs W:** do **not** plot idle **0 kW** on a separate axis when the watt axis also shows **negative** export — ApexCharts aligns both axes’ minima to the **same pixel row**, so a flat **0 kW** line sits at the **watt minimum** (e.g. −5500) and looks wrong. The example YAML uses **one watt axis** and **`transform: kW × 1000 → W`** (see comments if your entities are already W).
 3. **`group_by` `max` on signed grid power:** can bias bins; the examples use **`avg`** for **`sensor.grid_net_excl_wallboxes`** (ApexCharts Card keyword, not `mean`).
 4. **Wrong subtraction:** if wallboxes are **kW** but subtracted as **W**, `grid_net_excl_wallboxes` is wrong — the template in **`pvoptimizer_helpers.yaml`** converts **kW** wallboxes using `unit_of_measurement`.
-5. **Sign in chart:** HA often reports **grid import as positive** and **export (Einspeisung) as negative**. The example cards apply **`transform: return -1 * parseFloat(x)`** on the net series so **feed-in plots upward (positive)** and import downward. Remove that line if your entity already uses the opposite convention.
+5. **Sign in chart:** HA often reports **grid import as positive** and **export (Einspeisung) as negative**. The example cards use **`transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'`** so **feed-in plots upward** and invalid points become **`null`** (not **NaN**, which can break rendering).
+6. **Endless loading / blue spinner:** (1) Confirm **`sensor.grid_net_excl_wallboxes`** exists (reload templates). (2) Browser **F12** → **Console** for red errors. (3) Update **ApexCharts Card**; on heavy DBs try longer `group_by` (e.g. 10 min) or shorter **`graph_span`** as a test. (4) YAML: use the repo transforms that return **`null`** for non-finite values, not raw **`parseFloat`** that yields **NaN**.
 
 ## Derived ideas (optional)
 

@@ -18,7 +18,7 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Changed
 
-- **ApexCharts:** Netz weiter `transform: -x` (Ein + / Bez −). Wallbox **ohne** zweite kW-Achse (0 kW wirkte wie Watt-Minimum); **kW→W** per `transform` ×1000, gemeinsame **W**-Skala.
+- **ApexCharts:** `transform` nur **endliche** Werte / **`null`** (kein **NaN**); Netz **−n**; Wallbox **kW×1000**; **`update_interval`** / **`update_delay`**; Zeichenreihenfolge; Hinweise gegen **Spinner** in **`ENERGY_DASHBOARD_ENTITIES.md`**.
 - **`docs/ENERGY_DASHBOARD_ENTITIES.md`**: document **grid net excl. wallboxes** (`net_consumption_rounded` − `carport_power` − `garage_power`) + optional template sensor.
 - **`pvoptimizer_charge.yaml`**: If **clamped** SOC **≥** **`soc_voller_akku_schwelle_pct`** (default **95**), inner **`choose`** sets **`max_charge_w`** and **`soc_nahe_voll_max`** first (overrides exception weekday and forecast arms). **`docs/PVOPTIMIZER.md`** and **`README`** updated.
 - **Docs:** `docs/PVOPTIMIZER.md` and `README` updated for **`state_attr` write bounds**, **robustness** section, install paths (automations vs packages), and testing notes.

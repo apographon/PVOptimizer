@@ -6,14 +6,15 @@
 #    (net_consumption_rounded − Carport − Garage; Wallbox = 0 wenn unavailable; kW-Wallbox → ×1000).
 # 3. Wenn „Batterie laden“ keine Fläche zeigt: In HA → Verlauf prüfen, ob beim Laden Werte > 0
 #    kommen. Manche Geräte liefern Ladeleistung negativ — dann `invert: true` bei der Serie setzen.
-# 4. Reihenfolge: große Flächen (PV) zuerst, Batterie **zuletzt** ⇒ liegt optisch obenauf.
-# 5. Netz: In HA oft **positiv = Netzbezug**, **negativ = Einspeisung**. Die Netz-Serie nutzt
-#    `transform: -x`, damit im Diagramm **Einspeisung nach oben (positiv)** und Bezug nach unten erscheint.
+# 4. Reihenfolge: PV → Netz → Batterie → Wallboxen; **Wallbox zuletzt** (zeichnet obenauf).
+# 5. Netz: In HA oft **positiv = Netzbezug**, **negativ = Einspeisung**. YAML nutzt `transform` mit **`Number.isFinite`** → **−n** für die Darstellung (Ein + / Bez −); ungültige Punkte → **null** (kein **NaN**).
 #    Passt das nicht zu deinem Sensor: `transform`-Zeile entfernen. Y-Achse **`min: auto`**, damit negativ sichtbar bleibt.
 # 6. Wallboxen: oft **kW** (Zahl 0…11). **Nicht** eine zweite Y-Achse nutzen: Der Nullpunkt von kW liegt
 #    dann auf derselben Bildhöhe wie das Watt-Minimum — eine Linie bei 0 kW sieht aus wie z. B. -5500 W.
-#    Stattdessen: **eine W-Achse**, `transform` **×1000** (kW → W). Sensoren schon in **W**? Zeile
-#    `transform` durch `return isNaN(parseFloat(x)) ? 0 : parseFloat(x);` ersetzen (ohne ×1000).
+#    Stattdessen: **eine W-Achse**, `transform` **×1000** (kW → W). Sensoren schon in **W**? `transform` ohne `* 1000` (nur `Number.isFinite`-Zweig), siehe YAML.
+# 7. Lädt die Karte endlos (Spinner): oft **NaN** aus `transform` bei fehlendem State oder
+#    **fehlende Entity** (`grid_net_excl_wallboxes`). Transforms liefern nur **endliche** Zahlen oder **null**.
+#    Zusätzlich: `update_interval` / `update_delay` — Browser F12 → Konsole. Mini-Test: eine Serie `sensor.sun` o. ä.
 
 type: custom:apexcharts-card
 header:
@@ -24,6 +25,8 @@ header:
 graph_span: 24h
 span:
   start: day
+update_interval: 1min
+update_delay: 3s
 show:
   last_updated: false
 now:
@@ -80,12 +83,28 @@ series:
     stroke_width: 2
     yaxis_id: w
     unit: W
-    transform: return -1 * parseFloat(x);
+    transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'
     extend_to: now
     fill_raw: last
     group_by:
       duration: 5min
       func: avg
+
+  # Batterie vor Wallboxen: letzte Fläche obenauf; Wallbox-Linien danach (besser sichtbar).
+  - entity: sensor.battery_charging_power
+    name: Batterie laden
+    color: '#7b4397'
+    type: area
+    curve: smooth
+    opacity: 0.55
+    stroke_width: 2
+    yaxis_id: w
+    unit: W
+    extend_to: now
+    fill_raw: last
+    group_by:
+      duration: 5min
+      func: max
 
   - entity: sensor.carport_power
     name: Wallbox Carport
@@ -96,7 +115,7 @@ series:
     stroke_width: 1
     yaxis_id: w
     unit: W
-    transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
+    transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
     extend_to: now
     fill_raw: last
     group_by:
@@ -112,23 +131,7 @@ series:
     stroke_width: 1
     yaxis_id: w
     unit: W
-    transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
-    extend_to: now
-    fill_raw: last
-    group_by:
-      duration: 5min
-      func: max
-
-  # Fehlende Fläche? In HA-Verlauf prüfen. Ist Ladeleistung negativ, einfügen: invert: true
-  - entity: sensor.battery_charging_power
-    name: Batterie laden
-    color: '#7b4397'
-    type: area
-    curve: smooth
-    opacity: 0.55
-    stroke_width: 2
-    yaxis_id: w
-    unit: W
+    transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
     extend_to: now
     fill_raw: last
     group_by:
