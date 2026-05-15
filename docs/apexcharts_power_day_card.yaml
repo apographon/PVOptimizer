@@ -15,6 +15,8 @@
 # 7. Lädt die Karte endlos (Spinner): oft **NaN** aus `transform` bei fehlendem State oder
 #    **fehlende Entity** (`grid_net_excl_wallboxes`). Transforms liefern nur **endliche** Zahlen oder **null**.
 #    Zusätzlich: `update_interval` / `update_delay` — Browser F12 → Konsole. Mini-Test: eine Serie `sensor.sun` o. ä.
+# 8. Senkrechter Absturz der **Netz**-Kurve zur Linie „Jetzt“ / bis ans Y-Minimum: **`extend_to: now`** bei Netz
+#    streckt künstlich bis zur aktuellen Uhr — oft zusammen mit `group_by` fehlerhaft. Netz-Serie hat **`extend_to: false`**.
 
 type: custom:apexcharts-card
 header:
@@ -84,7 +86,7 @@ series:
     yaxis_id: w
     unit: W
     transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'
-    extend_to: now
+    extend_to: false
     fill_raw: last
     group_by:
       duration: 5min

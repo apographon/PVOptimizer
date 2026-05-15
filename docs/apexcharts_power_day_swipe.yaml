@@ -2,7 +2,7 @@
 # z. B. https://github.com/bramkragten/swipe-card — in HACS nach „swipe“ suchen.
 #
 # Im Dashboard als eine Karte einfügen (RAW). Weitere Tage: panel-Kopie mit offset: -4d usw.
-# Vergangene Tage: now: false (sonst irreführend).
+# Vergangene Tage: now: false. Dort **`extend_to: end`** (Ende des angezeigten Tages), nie **`now`** — sonst Artefakte.
 # Endloser Lade-Spinner: Kommentar **§7** in apexcharts_power_day_card.yaml. Netz: transform `-n`; Wallbox: kW→W ×1000; Reihenfolge Batterie dann Wallboxen.
 
 type: custom:swipe-card
@@ -79,7 +79,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'
-        extend_to: now
+        extend_to: false
         fill_raw: last
         group_by:
           duration: 5min
@@ -179,7 +179,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -194,7 +194,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -208,7 +208,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -223,7 +223,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -238,7 +238,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -294,7 +294,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -309,7 +309,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -323,7 +323,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -338,7 +338,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -353,7 +353,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -409,7 +409,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -424,7 +424,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -438,7 +438,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -453,7 +453,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min
@@ -468,7 +468,7 @@ cards:
         yaxis_id: w
         unit: W
         transform: 'const n = Number(x); return Number.isFinite(n) ? n * 1000 : null;'
-        extend_to: now
+        extend_to: end
         fill_raw: last
         group_by:
           duration: 5min

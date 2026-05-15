@@ -87,6 +87,7 @@ Use this entity in ApexCharts instead of raw `net_consumption_rounded` when you 
 4. **Wrong subtraction:** if wallboxes are **kW** but subtracted as **W**, `grid_net_excl_wallboxes` is wrong — the template in **`pvoptimizer_helpers.yaml`** converts **kW** wallboxes using `unit_of_measurement`.
 5. **Sign in chart:** HA often reports **grid import as positive** and **export (Einspeisung) as negative**. The example cards use **`transform: 'const n = Number(x); return Number.isFinite(n) ? -n : null;'`** so **feed-in plots upward** and invalid points become **`null`** (not **NaN**, which can break rendering).
 6. **Endless loading / blue spinner:** (1) Confirm **`sensor.grid_net_excl_wallboxes`** exists (reload templates). (2) Browser **F12** → **Console** for red errors. (3) Update **ApexCharts Card**; on heavy DBs try longer `group_by` (e.g. 10 min) or shorter **`graph_span`** as a test. (4) YAML: use the repo transforms that return **`null`** for non-finite values, not raw **`parseFloat`** that yields **NaN**.
+7. **Vertical cliff on “Jetzt” / line to Y-axis minimum (orange net):** **`extend_to: now`** on the net series bridges the last bucket to the clock “now” and can draw a bogus segment. Use **`extend_to: false`** for that series (repo default). **Past days** in swipe cards: use **`extend_to: end`**, not **`now`**, so the line does not stretch to *today’s* time.
 
 ## Derived ideas (optional)
 
