@@ -3,7 +3,9 @@ alias: PVoptimizer — battery max charge (hourly)
 description: 'Hourly max charge power from PV forecast and SOC (headroom to max SOC).
   Helpers: pvoptimizer_*; optional DWD pessimistic forecast; missing SOC or forecast
   uses standard max; exception weekday configurable. If SOC ≥ soc_voller_akku_schwelle_pct
-  (default 95), sets max charge to standard cap (overrides exception day and forecast arms).'
+  (default 95), sets max charge to standard cap (overrides exception day and forecast arms).
+  Forecast branches (dynamic / forced / wait-for-sun) run only when measured PV power
+  (sensor.total_dc_power) is > 0 W; otherwise min or standard max without using forecast.'
 mode: single
 triggers:
   - trigger: time_pattern
@@ -60,6 +62,7 @@ actions:
             | float(100), 0] | max, 100] | min] | min }}'
           soc: '{{ [[states(''sensor.battery_level'') | float(0), 0] | max, 100] | min
             }}'
+          pv_power_w: '{{ states(''sensor.total_dc_power'') | float(0) }}'
           pv_forecast_sensor: '{{ [states(''sensor.pv_forecast_today'') | float(0), 0]
             | max }}'
           pv_forecast: "{% if states('input_boolean.pvoptimizer_dwd_adjustment_enabled') != 'on' %}{{ pv_forecast_sensor }}{% else %}{% set p = pv_forecast_sensor | float(0) %}{% set c = [[states('sensor.finsing_kraftwerk_bewolkungsgrad') | float(0), 0] | max, 100] | min %}{% set pr = [states('sensor.finsing_kraftwerk_niederschlag') | float(0), 0] | max %}{% set fg = [[states('sensor.finsing_kraftwerk_nebelwahrscheinlichkeit') | float(0), 0] | max, 100] | min %}{% set c_th = states('input_number.pvoptimizer_dwd_cloud_threshold') | float(70) %}{% set max_r = states('input_number.pvoptimizer_dwd_max_reduction_pct') | float(35) / 100 %}{% set span = [100 - c_th, 1] | max %}{% set cf = 1 - max_r * ([c - c_th, 0] | max) / span %}{% set cf = [[cf, 1 - max_r] | max, 1] | min %}{% set pr_th = states('input_number.pvoptimizer_dwd_precip_threshold_mm') | float(0.1) %}{% set pr_mult = states('input_number.pvoptimizer_dwd_precip_factor_pct') | float(90) / 100 %}{% set fg_th = states('input_number.pvoptimizer_dwd_fog_threshold_pct') | float(70) %}{% set fg_mult = states('input_number.pvoptimizer_dwd_fog_factor_pct') | float(95) / 100 %}{% set pr_f = pr_mult if pr > pr_th else 1 %}{% set fg_f = fg_mult if fg > fg_th else 1 %}{{ [p * cf * pr_f * fg_f, 0] | max }}{% endif %}"
@@ -121,6 +124,34 @@ actions:
                   message: Exception day — max charge power {{ exception_max_w | int }} W.
                   data:
                     mode: single
+        - conditions:
+          - condition: template
+            value_template: '{{ (pv_power_w | float) <= 0 and (soc | float) < (reserved_soc_pct | float)
+              }}'
+          sequence:
+          - target:
+              entity_id: input_number.set_sg_battery_max_charge_power
+            data:
+              value: '{{ max_charge_w | int }}'
+            action: input_number.set_value
+          - data:
+              entity_id: input_text.battery_charge_decision
+              value: keine_pv_messung_ladebereit
+            action: input_text.set_value
+        - conditions:
+          - condition: template
+            value_template: '{{ (pv_power_w | float) <= 0 and (soc | float) >= (reserved_soc_pct | float)
+              }}'
+          sequence:
+          - target:
+              entity_id: input_number.set_sg_battery_max_charge_power
+            data:
+              value: '{{ mindest_output_w }}'
+            action: input_number.set_value
+          - data:
+              entity_id: input_text.battery_charge_decision
+              value: keine_pv_messung_warte
+            action: input_text.set_value
         - conditions:
           - condition: template
             value_template: '{{ (pv_forecast | float) >= (prognose_schwelle | float)
@@ -222,4 +253,4 @@ actions:
     data:
       level: info
       logger: pvoptimizer
-      message: "PVoptimizer: {{ now().strftime('%Y-%m-%d %H:%M') }} decision={{ states('input_text.battery_charge_decision') }} max_charge_W={{ states('input_number.set_sg_battery_max_charge_power') }} SOC={{ states('sensor.battery_level') }}% forecast_raw_kWh={{ states('sensor.pv_forecast_today') }} dwd_adj={{ states('input_boolean.pvoptimizer_dwd_adjustment_enabled') }}"
+      message: "PVoptimizer: {{ now().strftime('%Y-%m-%d %H:%M') }} decision={{ states('input_text.battery_charge_decision') }} max_charge_W={{ states('input_number.set_sg_battery_max_charge_power') }} SOC={{ states('sensor.battery_level') }}% PV_W={{ states('sensor.total_dc_power') }} forecast_raw_kWh={{ states('sensor.pv_forecast_today') }} dwd_adj={{ states('input_boolean.pvoptimizer_dwd_adjustment_enabled') }}"

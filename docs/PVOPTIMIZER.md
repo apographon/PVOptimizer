@@ -97,7 +97,7 @@ The PVoptimizer aligns **battery charge power** (from **PV only** in the intende
 
 | File | Role |
 |------|------|
-| `yaml/pvoptimizer_charge.yaml` | Automation id `1751448147075` — hourly logic: if SOC ≥ **`soc_voller_akku_schwelle_pct`** → **`max_charge_w`** / **`soc_nahe_voll_max`**; else optional **DWD** on **`pv_forecast`**, outer **`choose`** for incomplete SOC/forecast, **`state_attr` min/max** on writes, **`kein_zweig`**, `system_log.write` |
+| `yaml/pvoptimizer_charge.yaml` | Automation id `1751448147075` — hourly logic: if SOC ≥ **`soc_voller_akku_schwelle_pct`** → **`max_charge_w`** / **`soc_nahe_voll_max`**; if **measured PV ≤ 0** → no forecast arms (`keine_pv_messung_*`); else optional **DWD** on **`pv_forecast`**, exception weekday, forecast **`choose`**, **`kein_zweig`**, `system_log.write` |
 | `yaml/pvoptimizer_reset.yaml` | Automation id `1751732737952` — 20:00 reset: **`pvoptimizer_max_charge_w`** clamped like the charge automation |
 | `yaml/pvoptimizer_helpers.yaml` | Optional package: standard / exception caps, **optional DWD** tunables, **template sensor** **`sensor.grid_net_excl_wallboxes`** (net grid − wallboxes) |
 | `docs/assets/mushroom-battery-card.png` | Optional screenshot for the Lovelace example |
@@ -131,7 +131,7 @@ input_text:
     max: 30
 ```
 
-Place this (or equivalent) in `configuration.yaml` or a merged package. The automation writes short **tokens** to **`input_text.battery_charge_decision`** (e.g. `geladen`, `daten_unvollstaendig`, `soc_nahe_voll_max`, `kein_zweig`) for traces and dashboards—these identifiers are **stable** and not translated so existing automations keep working.
+Place this (or equivalent) in `configuration.yaml` or a merged package. The automation writes short **tokens** to **`input_text.battery_charge_decision`** (e.g. `geladen`, `daten_unvollstaendig`, `soc_nahe_voll_max`, `keine_pv_messung_ladebereit`, `keine_pv_messung_warte`, `kein_zweig`) for traces and dashboards—these identifiers are **stable** and not translated so existing automations keep working.
 
 **Parameter helpers** (recommended): include **`yaml/pvoptimizer_helpers.yaml`** as a package (see [Files in this repository](#files-in-this-repository)) or merge its `input_number` block. Defaults: standard max **5000 W**, exception weekday **4** (Friday), exception max **2500 W**.
 
@@ -341,6 +341,7 @@ All of this is implemented in templates (no extra automations).
 | **Exception weekday** | **`pvoptimizer_exception_weekday`** clamped to **0–6** (Monday–Sunday, Python `weekday()`). |
 | **“Wait for sun”** | **`mindest_output_w`**: **`mindest_ladeleistung`** capped by **`max_charge_w`**, then clamped to **[`write_abs_min_w`, `write_abs_max_w`]** (if the inverter **`min`** is high, the written value can be **above** the YAML minimum). |
 | **DWD pessimization** | Optional: **`pv_forecast`** = raw Open-Meteo kWh × weather factors when **`input_boolean.pvoptimizer_dwd_adjustment_enabled`** is **on** ([§ DWD](#optional-dwd-weather-pessimization)). |
+| **Measured PV gate** | **`sensor.total_dc_power`** (DC string sum, W). If **≤ 0** (or unavailable → **0**), forecast arms are **skipped**: **SOC below reserve** → **`max_charge_w`** (`keine_pv_messung_ladebereit`); **SOC at/above reserve** → **`mindest_output_w`** (`keine_pv_messung_warte`). Replace the entity id in **`pvoptimizer_charge.yaml`** if your integration uses another sensor. |
 | **Limits** | Garbage non-numeric states that still pass the “not unknown” gate are cast with **`float`** and may act like **0**; stricter validation would require an explicit numeric gate. |
 
 ---
@@ -358,6 +359,10 @@ There are **no** top-level **`conditions`** on the automation: every hourly run 
 
 - **SOC near full** — if **clamped** **`soc`** **≥** **`soc_voller_akku_schwelle_pct`** (default **95**): set max charge to **`max_charge_w`** (**standard** cap after slider clamp), **`soc_nahe_voll_max`**. This runs **before** exception weekday and forecast logic.
 - **Exception weekday** — if `now().weekday()` equals **`pvoptimizer_exception_weekday`** (clamped **0–6**): set max charge to the **exception** cap (**`pvoptimizer_exception_max_charge_w`**, clamped to the target **`input_number`** range), **`sonder_tag_forciert`**. Forecast arms are skipped that hour.
+- **No measured PV** — if **`sensor.total_dc_power`** (as **`pv_power_w`**) is **≤ 0** W: **without using forecast** — if **SOC &lt; reserve** → **`max_charge_w`**, **`keine_pv_messung_ladebereit`**; if **SOC ≥ reserve** → **`mindest_output_w`**, **`keine_pv_messung_warte`**.
+- **Good forecast** — only reached when **PV &gt; 0**: **`pv_forecast`** ≥ **`prognose_schwelle`** **and** ≥ **`bedarf`** → dynamic W, **`geladen`**.
+- **Bad forecast, low SOC** — only when **PV &gt; 0**: forecast below threshold **and** SOC **below** reserve → **`max_charge_w`**, **`ladung_erzwungen`**.
+- **Bad forecast, comfortable SOC** — only when **PV &gt; 0**: forecast below threshold **and** SOC **at/above** reserve → **`mindest_output_w`**, **`warte_auf_sonne`**.
 
 ```mermaid
 flowchart TD
@@ -366,21 +371,24 @@ flowchart TD
   O -->|no| S{soc ≥ soc_voller_akku_schwelle_pct?}
   S -->|yes| M[max_charge W\nsoc_nahe_voll_max]
   S -->|no| B{Exception weekday?}
-  B -->|yes| F[exception max W\nsonder_tag_forciert\nnotify 08:00 / 12:00 only]
-  B -->|no| C{pv_forecast ≥ threshold\nAND ≥ bedarf?}
-  C -->|yes| G[dynamic W\ngeladen\nnotify 08:00 / 12:00]
+  B -->|yes| F[exception max W\nsonder_tag_forciert]
+  B -->|no| P{total_dc_power\n≤ 0 W?}
+  P -->|yes, soc < reserve| N1[max_charge W\nkeine_pv_messung_ladebereit]
+  P -->|yes, soc ≥ reserve| N2[min W\nkeine_pv_messung_warte]
+  P -->|no| C{pv_forecast ≥ threshold\nAND ≥ bedarf?}
+  C -->|yes| G[dynamic W\ngeladen]
   C -->|no| D{pv_forecast < threshold\nAND soc < reserved?}
-  D -->|yes| H[pvoptimizer_max_charge W\nladung_erzwungen\nnotify 08:00 / 12:00]
+  D -->|yes| H[max_charge W\nladung_erzwungen]
   D -->|no| E{pv_forecast < threshold\nAND soc ≥ reserved?}
-  E -->|yes| I[min W\nwarte_auf_sonne\nnotify 08:00 / 12:00]
-  E -->|no| J[kein_zweig:\nonly battery_charge_decision\ninput_number unchanged]
+  E -->|yes| I[min W\nwarte_auf_sonne]
+  E -->|no| J[kein_zweig]
 ```
 
-**“Good day” branch:** Forecast at least `prognose_schwelle` **and** at least `bedarf` — **dynamic** watts (see **Computed quantities**), already within **[`write_abs_min_w`, `write_abs_max_w`]**.
+**“Good day” branch:** **Only if PV &gt; 0** — forecast at least `prognose_schwelle` **and** at least `bedarf` — **dynamic** watts (see **Computed quantities**), already within **[`write_abs_min_w`, `write_abs_max_w`]**.
 
-**“Bad day, below reserve”:** Forecast below `prognose_schwelle` **and** SOC **strictly below** the **clamped** reserve threshold — **`max_charge_w`** (standard cap after entity min/max clamp). Tune **`set_sg_reserved_soc_for_backup`** if you need a higher “panic” threshold than the literal backup reserve.
+**“Bad day, below reserve”:** **Only if PV &gt; 0** — forecast below `prognose_schwelle` **and** SOC **strictly below** the **clamped** reserve threshold — **`max_charge_w`** (standard cap after entity min/max clamp). Tune **`set_sg_reserved_soc_for_backup`** if you need a higher “panic” threshold than the literal backup reserve.
 
-**“Bad day, SOC at/above reserve”:** — **`mindest_output_w`** (see **Robustness**).
+**“Bad day, SOC at/above reserve”:** **Only if PV &gt; 0** — **`mindest_output_w`** (see **Robustness**).
 
 **Catch-all (last branch):** e.g. **`pv_forecast >= prognose_schwelle`** but **`pv_forecast < bedarf`**. No `input_number` change; **`kein_zweig`** for traceability.
 
@@ -418,6 +426,7 @@ Rationale: intraday you **shape** charging; in the evening you **release** the c
 5. **Hardware:** `set_sg_battery_max_charge_power` is installation-specific. The automation **reads that helper’s `min`/`max`** to constrain writes; align **`pvoptimizer_*`** helper **max** with your real inverter limit so intent and ceiling stay consistent.
 6. **Missing SOC / forecast:** The automation still runs; max charge is set to **`pvoptimizer_max_charge_w`** **after min/max clamp** on **`set_sg_battery_max_charge_power`**, and **`daten_unvollstaendig`** is recorded (see **Decision order**).
 7. **Input sanitizing:** Summarized in **[Robustness (clamping & valid range)](#robustness-clamping--valid-range)**. **Non-numeric** states that are **not** `unknown`/`…` are still cast with `float` and may behave like **0**—keep sensors numeric or extend the gate if you need stricter checks.
+8. **Measured PV gate:** Forecast-based arms run only when **`sensor.total_dc_power` &gt; 0** W (see **Decision order**). Point this entity at your **DC PV power** (or change it in **`pvoptimizer_charge.yaml`**).
 
 ---
 

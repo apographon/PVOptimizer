@@ -18,7 +18,8 @@ All notable changes to this project are documented here. The format is based on 
 
 ### Changed
 
-- **ApexCharts:** Netz **`extend_to: false`** (kein künstlicher Strich bis „Jetzt“); **Swipe** vergangene Tage **`extend_to: end`** statt **`now`**. Sonst: `transform` / **`update_interval`** wie zuvor; Doku **`ENERGY_DASHBOARD_ENTITIES.md`**.
+- **`pvoptimizer_charge.yaml`:** **≥ ~95 % SOC** weiter **`max_charge_w`** (über **`pvoptimizer_max_charge_w`**, typ. **5000 W**). **Vorhersage-Zweige** (`geladen`, `ladung_erzwungen`, `warte_auf_sonne`) nur wenn **`sensor.total_dc_power` &gt; 0**; sonst **`keine_pv_messung_ladebereit`** / **`keine_pv_messung_warte`** ohne Forecast. Log-Zeile: **`PV_W`**. **`docs/PVOPTIMIZER.md`**: Entscheidungsbaum.
+- **ApexCharts:** Netz **`extend_to: false`**; **Swipe** vergangene Tage **`extend_to: end`**; Hinweise in **`ENERGY_DASHBOARD_ENTITIES.md`**.
 - **`docs/ENERGY_DASHBOARD_ENTITIES.md`**: document **grid net excl. wallboxes** (`net_consumption_rounded` − `carport_power` − `garage_power`) + optional template sensor.
 - **`pvoptimizer_charge.yaml`**: If **clamped** SOC **≥** **`soc_voller_akku_schwelle_pct`** (default **95**), inner **`choose`** sets **`max_charge_w`** and **`soc_nahe_voll_max`** first (overrides exception weekday and forecast arms). **`docs/PVOPTIMIZER.md`** and **`README`** updated.
 - **Docs:** `docs/PVOPTIMIZER.md` and `README` updated for **`state_attr` write bounds**, **robustness** section, install paths (automations vs packages), and testing notes.
