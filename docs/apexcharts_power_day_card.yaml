@@ -89,7 +89,7 @@ series:
     fill_raw: last
     group_by:
       duration: 5min
-      func: mean
+      func: avg
 
   - entity: sensor.carport_power
     name: Wallbox Carport

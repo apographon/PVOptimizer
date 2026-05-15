@@ -87,7 +87,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: mean
+          func: avg
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -202,7 +202,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: mean
+          func: avg
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -317,7 +317,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: mean
+          func: avg
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -432,7 +432,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: mean
+          func: avg
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
