@@ -27,7 +27,7 @@ Paste the YAML into the dashboard **raw editor** as one card (swipe wraps severa
 | Battery **energy** (e.g. daily charge) | `sensor.battery_charge` / `sensor.battery_charge_nominal` | Often **kWh** or cumulative **energy** — **not** the same as power; wrong choice flattens on 0 or shows kWh in a W chart. |
 | Grid net (import / export) | `sensor.net_consumption_rounded` | **Raw grid coupling** vs. site load. **Important:** for analysis and charts, treat **`net_consumption_rounded` as including wallbox load** — **subtract both wallbox powers** to get grid flow **without** EV charging (see [Grid excluding wallboxes](#grid-excluding-wallboxes)). **Sign convention:** confirm in HA (often **positive = grid import**, **negative = export**). |
 | Net grid excl. wallboxes (computed) | `sensor.grid_net_excl_wallboxes` | **`net_consumption_rounded − carport − garage`**; wallbox **unavailable** → **0 W**. Defined in **`yaml/pvoptimizer_helpers.yaml`**. |
-| Wallbox carport | `sensor.carport_power` | Often **kW** in the UI — chart uses a **second y-axis** in kW. Template subtracts wallbox power in **W**. |
+| Wallbox carport | `sensor.carport_power` | Often **kW** in HA; the example charts convert to **W** in `transform` (×1000) so **0 kW plots at 0 W**, not at the chart bottom. |
 | Wallbox garage | `sensor.garage_power` | Same as carport. |
 
 ## Grid excluding wallboxes
@@ -82,7 +82,7 @@ Use this entity in ApexCharts instead of raw `net_consumption_rounded` when you 
 ### Chart vs. data: export not visible, wallboxes flat
 
 1. **Y-axis `min: 0`:** clips **negative** net values (typical **grid export**). Use **`min: auto`** on the watt axis (as in the current example YAML).
-2. **Wallbox in kW, PV in W:** on one axis, charger power (e.g. **3.7**) sits on a **0…8000 W** scale → invisible. Use the **second y-axis (kW)** in the example cards or put wallbox series on the **`w`** axis only if the entity is already **W**.
+2. **Second y-axis kW vs W:** do **not** plot idle **0 kW** on a separate axis when the watt axis also shows **negative** export — ApexCharts aligns both axes’ minima to the **same pixel row**, so a flat **0 kW** line sits at the **watt minimum** (e.g. −5500) and looks wrong. The example YAML uses **one watt axis** and **`transform: kW × 1000 → W`** (see comments if your entities are already W).
 3. **`group_by` `max` on signed grid power:** can bias bins; the examples use **`avg`** for **`sensor.grid_net_excl_wallboxes`** (ApexCharts Card keyword, not `mean`).
 4. **Wrong subtraction:** if wallboxes are **kW** but subtracted as **W**, `grid_net_excl_wallboxes` is wrong — the template in **`pvoptimizer_helpers.yaml`** converts **kW** wallboxes using `unit_of_measurement`.
 5. **Sign in chart:** HA often reports **grid import as positive** and **export (Einspeisung) as negative**. The example cards apply **`transform: return -1 * parseFloat(x)`** on the net series so **feed-in plots upward (positive)** and import downward. Remove that line if your entity already uses the opposite convention.

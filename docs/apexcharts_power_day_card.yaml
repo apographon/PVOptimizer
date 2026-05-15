@@ -10,14 +10,15 @@
 # 5. Netz: In HA oft **positiv = Netzbezug**, **negativ = Einspeisung**. Die Netz-Serie nutzt
 #    `transform: -x`, damit im Diagramm **Einspeisung nach oben (positiv)** und Bezug nach unten erscheint.
 #    Passt das nicht zu deinem Sensor: `transform`-Zeile entfernen. Y-Achse **`min: auto`**, damit negativ sichtbar bleibt.
-# 6. Wallboxen: oft **kW** (0…11) statt W — auf derselben Skala wie PV (0…8000 W) unsichtbar.
-#    Lösung: rechte Y-Achse **kW** (`yaxis_id: kw`). Liefern die Sensoren schon **W**, Achse `kw` entfernen
-#    und Carport/Garage auf `yaxis_id: w` + `unit: W` stellen.
+# 6. Wallboxen: oft **kW** (Zahl 0…11). **Nicht** eine zweite Y-Achse nutzen: Der Nullpunkt von kW liegt
+#    dann auf derselben Bildhöhe wie das Watt-Minimum — eine Linie bei 0 kW sieht aus wie z. B. -5500 W.
+#    Stattdessen: **eine W-Achse**, `transform` **×1000** (kW → W). Sensoren schon in **W**? Zeile
+#    `transform` durch `return isNaN(parseFloat(x)) ? 0 : parseFloat(x);` ersetzen (ohne ×1000).
 
 type: custom:apexcharts-card
 header:
   show: true
-  title: Leistung heute (W) / Wallbox (kW)
+  title: Leistung heute (W)
   show_states: false
 # Kalendertag 00:00–24:00 (laut ApexCharts-Doku: start XOR end, nicht beides)
 graph_span: 24h
@@ -53,13 +54,6 @@ yaxis:
       title:
         text: W
     decimals: 0
-  - id: kw
-    opposite: true
-    min: 0
-    apex_config:
-      title:
-        text: kW
-    decimals: 2
 
 series:
   - entity: sensor.total_dc_power
@@ -100,7 +94,9 @@ series:
     curve: stepline
     opacity: 0.5
     stroke_width: 1
-    yaxis_id: kw
+    yaxis_id: w
+    unit: W
+    transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
     extend_to: now
     fill_raw: last
     group_by:
@@ -114,7 +110,9 @@ series:
     curve: stepline
     opacity: 0.55
     stroke_width: 1
-    yaxis_id: kw
+    yaxis_id: w
+    unit: W
+    transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
     extend_to: now
     fill_raw: last
     group_by:

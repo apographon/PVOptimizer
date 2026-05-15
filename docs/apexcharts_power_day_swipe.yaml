@@ -3,7 +3,7 @@
 #
 # Im Dashboard als eine Karte einfügen (RAW). Weitere Tage: panel-Kopie mit offset: -4d usw.
 # Vergangene Tage: now: false (sonst irreführend).
-# Netz-Serie: siehe apexcharts_power_day_card.yaml — `transform` flippt Vorzeichen fürs Diagramm (Ein + / Bez −).
+# Netz-Serie: `transform` flippt Vorzeichen (Ein + / Bez −). Wallbox: **eine W-Achse**, kW→W via ×1000 in `transform` (keine 2. Achse — sonst 0 kW auf Höhe des Watt-Minimums).
 
 type: custom:swipe-card
 parameters:
@@ -17,7 +17,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — heute (W) / WB kW"
+      title: "Leistung — heute (W)"
       show_states: false
     graph_span: 24h
     span:
@@ -52,13 +52,6 @@ cards:
           title:
             text: W
         decimals: 0
-      - id: kw
-        opposite: true
-        min: 0
-        apex_config:
-          title:
-            text: kW
-        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -96,7 +89,9 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -109,7 +104,9 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -133,7 +130,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — gestern (W) / WB kW"
+      title: "Leistung — gestern (W)"
       show_states: false
     graph_span: 24h
     span:
@@ -168,13 +165,6 @@ cards:
           title:
             text: W
         decimals: 0
-      - id: kw
-        opposite: true
-        min: 0
-        apex_config:
-          title:
-            text: kW
-        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -212,7 +202,9 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -225,7 +217,9 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -249,7 +243,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — vor 2 Tagen (W) / WB kW"
+      title: "Leistung — vor 2 Tagen (W)"
       show_states: false
     graph_span: 24h
     span:
@@ -284,13 +278,6 @@ cards:
           title:
             text: W
         decimals: 0
-      - id: kw
-        opposite: true
-        min: 0
-        apex_config:
-          title:
-            text: kW
-        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -328,7 +315,9 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -341,7 +330,9 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -365,7 +356,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — vor 3 Tagen (W) / WB kW"
+      title: "Leistung — vor 3 Tagen (W)"
       show_states: false
     graph_span: 24h
     span:
@@ -400,13 +391,6 @@ cards:
           title:
             text: W
         decimals: 0
-      - id: kw
-        opposite: true
-        min: 0
-        apex_config:
-          title:
-            text: kW
-        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -444,7 +428,9 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
@@ -457,7 +443,9 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: kw
+        yaxis_id: w
+        unit: W
+        transform: return (isNaN(parseFloat(x)) ? 0 : parseFloat(x)) * 1000;
         extend_to: now
         fill_raw: last
         group_by:
