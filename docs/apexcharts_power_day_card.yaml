@@ -3,15 +3,20 @@
 # Voraussetzungen:
 # 1. HACS → "ApexCharts Card" installieren, Dashboard neu laden.
 # 2. Template-Sensor `sensor.grid_net_excl_wallboxes` aus ENERGY_DASHBOARD_ENTITIES.md anlegen
-#    (net_consumption_rounded − Carport − Garage; Wallbox = 0 wenn unavailable).
-# 4. Wenn „Batterie laden“ keine Fläche zeigt: In HA → Verlauf prüfen, ob beim Laden Werte > 0
+#    (net_consumption_rounded − Carport − Garage; Wallbox = 0 wenn unavailable; kW-Wallbox → ×1000).
+# 3. Wenn „Batterie laden“ keine Fläche zeigt: In HA → Verlauf prüfen, ob beim Laden Werte > 0
 #    kommen. Manche Geräte liefern Ladeleistung negativ — dann `invert: true` bei der Serie setzen.
-# 5. Reihenfolge: große Flächen (PV) zuerst, Batterie **zuletzt** ⇒ liegt optisch obenauf.
+# 4. Reihenfolge: große Flächen (PV) zuerst, Batterie **zuletzt** ⇒ liegt optisch obenauf.
+# 5. Netzbezug/Export: Y-Achse **min nicht auf 0 fixieren** — sonst werden negative Werte (Export)
+#    abgeschnitten. home_consumption / Netto-Bezug: meist **positiv = Bezug**, **negativ = Einspeisung**.
+# 6. Wallboxen: oft **kW** (0…11) statt W — auf derselben Skala wie PV (0…8000 W) unsichtbar.
+#    Lösung: rechte Y-Achse **kW** (`yaxis_id: kw`). Liefern die Sensoren schon **W**, Achse `kw` entfernen
+#    und Carport/Garage auf `yaxis_id: w` + `unit: W` stellen.
 
 type: custom:apexcharts-card
 header:
   show: true
-  title: Leistung heute (W)
+  title: Leistung heute (W) / Wallbox (kW)
   show_states: false
 # Kalendertag 00:00–24:00 (laut ApexCharts-Doku: start XOR end, nicht beides)
 graph_span: 24h
@@ -42,11 +47,18 @@ apex_config:
     enabled: false
 yaxis:
   - id: w
-    min: 0
+    min: auto
     apex_config:
       title:
         text: W
     decimals: 0
+  - id: kw
+    opposite: true
+    min: 0
+    apex_config:
+      title:
+        text: kW
+    decimals: 2
 
 series:
   - entity: sensor.total_dc_power
@@ -77,7 +89,7 @@ series:
     fill_raw: last
     group_by:
       duration: 5min
-      func: max
+      func: mean
 
   - entity: sensor.carport_power
     name: Wallbox Carport
@@ -86,7 +98,7 @@ series:
     curve: stepline
     opacity: 0.5
     stroke_width: 1
-    yaxis_id: w
+    yaxis_id: kw
     extend_to: now
     fill_raw: last
     group_by:
@@ -100,7 +112,7 @@ series:
     curve: stepline
     opacity: 0.55
     stroke_width: 1
-    yaxis_id: w
+    yaxis_id: kw
     extend_to: now
     fill_raw: last
     group_by:

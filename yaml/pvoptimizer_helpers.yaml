@@ -1,6 +1,7 @@
 # Optional package: merge under packages: or copy into configuration.yaml (see docs).
 # DWD: set pvoptimizer_dwd_adjustment_enabled ON and edit DWD entity ids in pvoptimizer_charge.yaml if needed.
 # Template sensor: net grid power excluding both wallboxes (unavailable wallbox → 0 W). Used by apexcharts_power_day_card.yaml.
+# Wallbox sensors often report kW — convert to W before subtracting from net (expected in W).
 
 template:
   - sensor:
@@ -14,9 +15,19 @@ template:
           {% set bad = ['unknown', 'unavailable', 'none', ''] %}
           {% set cp = states('sensor.carport_power') %}
           {% set gr = states('sensor.garage_power') %}
-          {% set cp_w = 0 if cp in bad else cp | float(0) %}
-          {% set gr_w = 0 if gr in bad else gr | float(0) %}
-          {{ net - cp_w - gr_w }}
+          {% set mcp = namespace(x=1) %}
+          {% set mgr = namespace(x=1) %}
+          {% if cp not in bad %}
+            {% set u = state_attr('sensor.carport_power', 'unit_of_measurement') | default('', true) | lower | replace('kilowatt','kw') %}
+            {% if u == 'kw' %}{% set mcp.x = 1000 %}{% endif %}
+          {% endif %}
+          {% if gr not in bad %}
+            {% set u = state_attr('sensor.garage_power', 'unit_of_measurement') | default('', true) | lower | replace('kilowatt','kw') %}
+            {% if u == 'kw' %}{% set mgr.x = 1000 %}{% endif %}
+          {% endif %}
+          {% set cp_w = 0 if cp in bad else cp | float(0) * mcp.x %}
+          {% set gr_w = 0 if gr in bad else gr | float(0) * mgr.x %}
+          {{ (net - cp_w - gr_w) | round(0) }}
 
 input_boolean:
   pvoptimizer_dwd_adjustment_enabled:

@@ -27,8 +27,8 @@ Paste the YAML into the dashboard **raw editor** as one card (swipe wraps severa
 | Battery **energy** (e.g. daily charge) | `sensor.battery_charge` / `sensor.battery_charge_nominal` | Often **kWh** or cumulative **energy** — **not** the same as power; wrong choice flattens on 0 or shows kWh in a W chart. |
 | Grid net (import / export) | `sensor.net_consumption_rounded` | **Raw grid coupling** vs. site load. **Important:** for analysis and charts, treat **`net_consumption_rounded` as including wallbox load** — **subtract both wallbox powers** to get grid flow **without** EV charging (see [Grid excluding wallboxes](#grid-excluding-wallboxes)). **Sign convention:** confirm in HA (often **positive = grid import**, **negative = export**). |
 | Net grid excl. wallboxes (computed) | `sensor.grid_net_excl_wallboxes` | **`net_consumption_rounded − carport − garage`**; wallbox **unavailable** → **0 W**. Defined in **`yaml/pvoptimizer_helpers.yaml`**. |
-| Wallbox carport | `sensor.carport_power` | EV charger **power** (W). **Subtract from** `net_consumption_rounded` when isolating non-EV grid. |
-| Wallbox garage | `sensor.garage_power` | EV charger **power** (W). **Subtract from** `net_consumption_rounded` when isolating non-EV grid. |
+| Wallbox carport | `sensor.carport_power` | Often **kW** in the UI — chart uses a **second y-axis** in kW. Template subtracts wallbox power in **W**. |
+| Wallbox garage | `sensor.garage_power` | Same as carport. |
 
 ## Grid excluding wallboxes
 
@@ -40,8 +40,8 @@ Paste the YAML into the dashboard **raw editor** as one card (swipe wraps severa
 
 **Assumptions (verify on your site):**
 
-- All inputs are **W** and comparable at the same instant.
-- **`carport_power`** / **`garage_power`:** if state is **`unknown`**, **`unavailable`**, **`none`**, or empty, treat power as **0** (same as idle).
+- **`net_consumption_rounded`** is comparable to wallbox power in **W** (after converting wallbox **kW** in the template below).
+- **`carport_power`** / **`garage_power`:** if state is **`unknown`**, **`unavailable`**, **`none`**, or empty, treat power as **0** (same as idle). If `unit_of_measurement` is **kW**, the template multiplies by **1000** before subtracting from net.
 
 ### Template sensor (`sensor.grid_net_excl_wallboxes`)
 
@@ -62,12 +62,29 @@ template:
           {% set bad = ['unknown', 'unavailable', 'none', ''] %}
           {% set cp = states('sensor.carport_power') %}
           {% set gr = states('sensor.garage_power') %}
-          {% set cp_w = 0 if cp in bad else cp | float(0) %}
-          {% set gr_w = 0 if gr in bad else gr | float(0) %}
-          {{ net - cp_w - gr_w }}
+          {% set mcp = namespace(x=1) %}
+          {% set mgr = namespace(x=1) %}
+          {% if cp not in bad %}
+            {% set u = state_attr('sensor.carport_power', 'unit_of_measurement') | default('', true) | lower | replace('kilowatt','kw') %}
+            {% if u == 'kw' %}{% set mcp.x = 1000 %}{% endif %}
+          {% endif %}
+          {% if gr not in bad %}
+            {% set u = state_attr('sensor.garage_power', 'unit_of_measurement') | default('', true) | lower | replace('kilowatt','kw') %}
+            {% if u == 'kw' %}{% set mgr.x = 1000 %}{% endif %}
+          {% endif %}
+          {% set cp_w = 0 if cp in bad else cp | float(0) * mcp.x %}
+          {% set gr_w = 0 if gr in bad else gr | float(0) * mgr.x %}
+          {{ (net - cp_w - gr_w) | round(0) }}
 ```
 
 Use this entity in ApexCharts instead of raw `net_consumption_rounded` when you want **Netz ohne Wallboxen**. Ready-made card: **[`apexcharts_power_day_card.yaml`](apexcharts_power_day_card.yaml)**. **Multiple days:** swipe variant **[`apexcharts_power_day_swipe.yaml`](apexcharts_power_day_swipe.yaml)** (requires HACS **Swipe Card**).
+
+### Chart vs. data: export not visible, wallboxes flat
+
+1. **Y-axis `min: 0`:** clips **negative** net values (typical **grid export**). Use **`min: auto`** on the watt axis (as in the current example YAML).
+2. **Wallbox in kW, PV in W:** on one axis, charger power (e.g. **3.7**) sits on a **0…8000 W** scale → invisible. Use the **second y-axis (kW)** in the example cards or put wallbox series on the **`w`** axis only if the entity is already **W**.
+3. **`group_by` `max` on signed grid power:** can bias bins; the examples use **`mean`** for **`sensor.grid_net_excl_wallboxes`**.
+4. **Wrong subtraction:** if wallboxes are **kW** but subtracted as **W**, `grid_net_excl_wallboxes` is wrong — the template in **`pvoptimizer_helpers.yaml`** converts **kW** wallboxes using `unit_of_measurement`.
 
 ## Derived ideas (optional)
 

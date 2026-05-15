@@ -3,6 +3,7 @@
 #
 # Im Dashboard als eine Karte einfügen (RAW). Weitere Tage: panel-Kopie mit offset: -4d usw.
 # Vergangene Tage: now: false (sonst irreführend).
+# Y-Achse / Wallbox: wie apexcharts_power_day_card.yaml — Netz min auto, Wallbox-Achse kW.
 
 type: custom:swipe-card
 parameters:
@@ -16,7 +17,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — heute (W)"
+      title: "Leistung — heute (W) / WB kW"
       show_states: false
     graph_span: 24h
     span:
@@ -46,11 +47,18 @@ cards:
         enabled: false
     yaxis:
       - id: w
-        min: 0
+        min: auto
         apex_config:
           title:
             text: W
         decimals: 0
+      - id: kw
+        opposite: true
+        min: 0
+        apex_config:
+          title:
+            text: kW
+        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -79,7 +87,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: max
+          func: mean
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -87,7 +95,7 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -100,7 +108,7 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -124,7 +132,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — gestern (W)"
+      title: "Leistung — gestern (W) / WB kW"
       show_states: false
     graph_span: 24h
     span:
@@ -154,11 +162,18 @@ cards:
         enabled: false
     yaxis:
       - id: w
-        min: 0
+        min: auto
         apex_config:
           title:
             text: W
         decimals: 0
+      - id: kw
+        opposite: true
+        min: 0
+        apex_config:
+          title:
+            text: kW
+        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -187,7 +202,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: max
+          func: mean
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -195,7 +210,7 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -208,7 +223,7 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -232,7 +247,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — vor 2 Tagen (W)"
+      title: "Leistung — vor 2 Tagen (W) / WB kW"
       show_states: false
     graph_span: 24h
     span:
@@ -262,11 +277,18 @@ cards:
         enabled: false
     yaxis:
       - id: w
-        min: 0
+        min: auto
         apex_config:
           title:
             text: W
         decimals: 0
+      - id: kw
+        opposite: true
+        min: 0
+        apex_config:
+          title:
+            text: kW
+        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -295,7 +317,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: max
+          func: mean
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -303,7 +325,7 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -316,7 +338,7 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -340,7 +362,7 @@ cards:
   - type: custom:apexcharts-card
     header:
       show: true
-      title: "Leistung — vor 3 Tagen (W)"
+      title: "Leistung — vor 3 Tagen (W) / WB kW"
       show_states: false
     graph_span: 24h
     span:
@@ -370,11 +392,18 @@ cards:
         enabled: false
     yaxis:
       - id: w
-        min: 0
+        min: auto
         apex_config:
           title:
             text: W
         decimals: 0
+      - id: kw
+        opposite: true
+        min: 0
+        apex_config:
+          title:
+            text: kW
+        decimals: 2
     series:
       - entity: sensor.total_dc_power
         name: PV (DC)
@@ -403,7 +432,7 @@ cards:
         fill_raw: last
         group_by:
           duration: 5min
-          func: max
+          func: mean
       - entity: sensor.carport_power
         name: Wallbox Carport
         color: '#e8c547'
@@ -411,7 +440,7 @@ cards:
         curve: stepline
         opacity: 0.5
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
@@ -424,7 +453,7 @@ cards:
         curve: stepline
         opacity: 0.55
         stroke_width: 1
-        yaxis_id: w
+        yaxis_id: kw
         extend_to: now
         fill_raw: last
         group_by:
