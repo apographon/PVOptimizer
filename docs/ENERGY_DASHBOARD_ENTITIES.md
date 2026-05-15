@@ -85,6 +85,7 @@ Use this entity in ApexCharts instead of raw `net_consumption_rounded` when you 
 2. **Wallbox in kW, PV in W:** on one axis, charger power (e.g. **3.7**) sits on a **0…8000 W** scale → invisible. Use the **second y-axis (kW)** in the example cards or put wallbox series on the **`w`** axis only if the entity is already **W**.
 3. **`group_by` `max` on signed grid power:** can bias bins; the examples use **`avg`** for **`sensor.grid_net_excl_wallboxes`** (ApexCharts Card keyword, not `mean`).
 4. **Wrong subtraction:** if wallboxes are **kW** but subtracted as **W**, `grid_net_excl_wallboxes` is wrong — the template in **`pvoptimizer_helpers.yaml`** converts **kW** wallboxes using `unit_of_measurement`.
+5. **Sign in chart:** HA often reports **grid import as positive** and **export (Einspeisung) as negative**. The example cards apply **`transform: return -1 * parseFloat(x)`** on the net series so **feed-in plots upward (positive)** and import downward. Remove that line if your entity already uses the opposite convention.
 
 ## Derived ideas (optional)
 

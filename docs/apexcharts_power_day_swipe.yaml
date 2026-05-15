@@ -3,7 +3,7 @@
 #
 # Im Dashboard als eine Karte einfügen (RAW). Weitere Tage: panel-Kopie mit offset: -4d usw.
 # Vergangene Tage: now: false (sonst irreführend).
-# Y-Achse / Wallbox: wie apexcharts_power_day_card.yaml — Netz min auto, Wallbox-Achse kW.
+# Netz-Serie: siehe apexcharts_power_day_card.yaml — `transform` flippt Vorzeichen fürs Diagramm (Ein + / Bez −).
 
 type: custom:swipe-card
 parameters:
@@ -75,7 +75,7 @@ cards:
           duration: 5min
           func: max
       - entity: sensor.grid_net_excl_wallboxes
-        name: Netz ohne Wallboxen
+        name: Netz o. WB (Ein + / Bez −)
         color: '#e07020'
         type: area
         curve: smooth
@@ -83,6 +83,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
+        transform: return -1 * parseFloat(x);
         extend_to: now
         fill_raw: last
         group_by:
@@ -190,7 +191,7 @@ cards:
           duration: 5min
           func: max
       - entity: sensor.grid_net_excl_wallboxes
-        name: Netz ohne Wallboxen
+        name: Netz o. WB (Ein + / Bez −)
         color: '#e07020'
         type: area
         curve: smooth
@@ -198,6 +199,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
+        transform: return -1 * parseFloat(x);
         extend_to: now
         fill_raw: last
         group_by:
@@ -305,7 +307,7 @@ cards:
           duration: 5min
           func: max
       - entity: sensor.grid_net_excl_wallboxes
-        name: Netz ohne Wallboxen
+        name: Netz o. WB (Ein + / Bez −)
         color: '#e07020'
         type: area
         curve: smooth
@@ -313,6 +315,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
+        transform: return -1 * parseFloat(x);
         extend_to: now
         fill_raw: last
         group_by:
@@ -420,7 +423,7 @@ cards:
           duration: 5min
           func: max
       - entity: sensor.grid_net_excl_wallboxes
-        name: Netz ohne Wallboxen
+        name: Netz o. WB (Ein + / Bez −)
         color: '#e07020'
         type: area
         curve: smooth
@@ -428,6 +431,7 @@ cards:
         stroke_width: 2
         yaxis_id: w
         unit: W
+        transform: return -1 * parseFloat(x);
         extend_to: now
         fill_raw: last
         group_by:
